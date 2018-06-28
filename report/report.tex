@@ -1,0 +1,297 @@
+\documentclass[a4paper, 12pt]{article}
+\usepackage[italian]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{frontespizio}
+\usepackage{hyperref}
+\hypersetup{hidelinks,
+	colorlinks = true,
+	urlcolor = black, 
+	linkcolor = black}
+
+\begin{document}
+	\begin{frontespizio}
+		\Preambolo{\usepackage{datetime}}
+		\Istituzione{Università degli Studi di Verona}
+		\Divisione{Dipartimento di informatica}
+		\Titolo{Analisi di Sistemi Informatici}
+		\Scuola{}
+		\Sottotitolo{Report delle attività di laboratorio}
+		\Candidato[VR424505]{Davide Bianchi}
+		\Candidato[VR423791]{Marco Colognese}
+		\Candidato[VR423614]{Mattia Rossini}
+		\NCandidato{Candidati}
+		\Annoaccademico{2017/2018}
+	\end{frontespizio}
+	\tableofcontents
+	\newpage
+	
+	
+	\section*{Introduzione}
+	\addcontentsline{toc}{section}{Introduzione}
+	Nella seguente relazione sono riportati gli esercizi svolti dal nostro gruppo e le relative analisi effettuate su di essi.
+	
+	Essendo un gruppo di 3 membri, abbiamo scelto di svolgere 5 dei 6 esercizi assegnati:
+	\begin{itemize}
+		\item \textbf{Esercizio 1}: implementazione dei test di unità adeguati a verificare la correttezza delle procedure per il calcolo del codice fiscale, in modo tale da ottenere una copertura dei sorgenti quanto più vicina al 100\%.
+		
+		\item \textbf{Esercizio 2}: implementazione in Python di una procedura non ricorsiva per il calcolo dell’IRPEF e, in seguito, dei test di unità adeguati a verificare la correttezza della procedura implementata, in modo tale da ottenere una copertura dei sorgenti quanto più vicina al
+		100\%.
+		
+		\item \textbf{Esercizio 3}: implementazione in Python di una procedura per il calcolo della Pasqua e, in seguito, dei test di unità adeguati a verificare la correttezza della procedura
+		implementata, in modo tale da ottenere una copertura dei sorgenti quanto più vicina al
+		100\%.
+		
+		\item \textbf{Esercizio 4}: Utilizzando gli strumenti di analisi dinamica introdotti nel corso del laboratorio, sono stati monitorati i fork di processo ed analizzato lo scambio di messaggi tra
+		processi padre e figlio. \MakeUppercase{è} stata monitorata la possibilità di furto di dati sensibili, quali credenziali di accesso, ad esempio effettuando tale attività sul processo \textit{sshd}.
+		
+		\item \textbf{Esercizio 5a}: implementazione di una procedura che tenta di scrivere in un file posto in una directory per cui non è concessa autorizzazione di scrittura o accesso (e.g. \textit{/var}).
+		
+		\noindent
+		Utilizzando gli strumenti di analisi dinamica introdotti nel corso del laboratorio, sono stati monitorati tali tentativi di scrittura e sono stati gestiti generando un log.
+		
+	\end{itemize}
+	
+	\newpage
+	\section*{Esercizio 1 - Calcolo del codice fiscale}
+	\addcontentsline{toc}{section}{Esercizio 1 - Calcolo del codice fiscale}
+	\subsection*{Codice dell'algoritmo}
+	\addcontentsline{toc}{subsection}{Codice dell'algoritmo}
+	Per lo svolgimento di questo esercizio ci siamo basati sul codice proposto durante l'ultima lezione per il calcolo del codice fiscale. Ad esso abbiamo apportato le seguenti modifiche (facendo riferimento a questa procedura di calcolo: \url{http://www.calcolocodicefiscale.org/algoritmo+codice+fiscale.html}) per migliorare l'algoritmo che non ricopriva alcuni casi particolari quali:
+	\begin{itemize}
+		
+		\item implementazione differente degli algoritmi per il calcolo del nome e del cognome (inizialmente calcolati allo stesso modo).
+		
+		\noindent
+		La differenza sta nella scelta delle consonanti per nomi e cognomi aventi più di quattro lettere: 
+		\begin{itemize}
+			\item nel caso del nome verranno considerate la prima, la terza e la quarta lettera;
+			
+			\item nel caso del cognome verranno scelte le prime tre consonanti.
+			
+		\end{itemize}
+		
+		\item Calcolo del codice fiscale per individui aventi nome e/o cognome composti da meno di 3 lettere, aggiungendo un numero di volte il carattere \textit{x} pari alle lettere mancanti.
+		
+		\item Calcolo del codice fiscale per individui aventi nome e/o cognome composti da 3 lettere, due della quali sono la stessa vocale (es. \textit{Ada} viene calcolata come \textit{daa}).
+		
+	\end{itemize}
+	\noindent
+	Il file \textit{codiceFiscale.py} deve essere eseguito ricevendo in input cinque parametri: nome, cognome, data di nascita (gg/mm/aaaa), comune di nascita e sesso (\textit{m} oppure \textit{f}). Questi parametri verranno passati alle seguenti procedure:
+	\begin{itemize}
+		\item \textit{estrai\_nome(nome)}: applica l'algoritmo per la selezione dei tre caratteri (consonanti e/o vocali) identificativi del nome;
+		\item \textit{estrai\_cognome(cognome)}: applica l'algoritmo per la selezione dei tre caratteri (consonanti e/o vocali) identificativi del cognome;
+		\item \textit{genera\_mese(mese)}: restituisce il codice corrispondente al mese, preso da una tabella;
+		\item \textit{codice\_comune(comune)}: restituisce il codice corrispondente al comune di nascita, preso da una tabella;
+		\item \textit{genera\_giorno(giorno, sesso)}: restituisce il giorno di nascita se l'individuo è di sesso maschile, altrimenti restituisce il giorno sommato alla costante 40;
+		
+		\item \textit{genera\_codice\_controllo(codice)}: riceve in input un codice fiscale senza l'ultimo carattere e restituisce lo stesso concatenandogli un carattere preso da una tabella, dopo aver effettuato delle operazioni definite dall'algoritmo.
+	\end{itemize}
+	
+	\subsection*{Testing}
+	\addcontentsline{toc}{subsection}{Testing}
+	In seguito abbiamo creato il file \textit{test.py} nel quale sono contenuti gli \textit{unit test} relativi alle procedure sopradescritte. Le parti principali di questi test sono gli \textit{assert}, che si dividono in quattro tipologie:
+	\begin{itemize}
+		\item \textit{assertEqual}: verifica che la procedura, con eventuali input, restituisca il risultato atteso (nei nostri test abbiamo optato per questa soluzione);
+		\item \textit{assertTrue} o {assertFalse}: per verificare una condizione booleana;
+		\item \textit{assertRaises}: verifica che venga sollevata una certa eccezione.
+	\end{itemize}
+	\noindent
+	Essi sono utili per verificare il corretto funzionamento dell'algoritmo implementato poiché vanno a testare l'output di ciascuna funzione sui vari input scelti. La selezione degli input non è casuale, bensì devono essere delle combinazioni che permettano di effettuare una \textit{coverage} del codice quanto più vicina al 100\%. Per fare ciò è necessario inserire dei parametri che consentano di ricoprire ciascun \textit{branch} di esecuzione.
+	
+	Gli input da noi scelti permettono di effettuare una \textit{coverage} del 100\% delle procedure di interesse. Non essendo invece rilevanti i test sul \textit{main} (verrà sempre eseguito all'avvio del programma), abbiamo inserito la clausola \textit{$\sharp$pragma: no cover} che ci consente di escludere la porzione di codice scelta dall'analisi del programma.
+	
+	Per verificare la correttezza dei test presenti nel file \textit{test.py} è sufficiente avviare il Bash-Script chiamato \textit{script.sh} che li eseguirà tutti e riporterà i risultati nel file \textit{report.txt} mostrando le seguenti informazioni relative a \textit{codiceFiscale.py}:
+	\begin{itemize}
+		\item numero di statement presenti nel programma (\textit{Stmts}) e quanti di essi non sono stati eseguiti (\textit{Miss});
+		\item numero di branch presenti nel programma (\textit{Branch}) e quanti di essi non sono stati visitati (\textit{BrMiss});
+		\item la percentuale di \textit{coverage} dell'intero file (\textit{Cover});
+		\item le righe di codice non visitate dai test (\textit{Missing}).
+		
+	\end{itemize}
+	
+	\noindent
+	Lo script riporterà inoltre il risultato dei test in formato \textit{HTML}. In esso sarà riportato il codice sorgente del programma del quale si potranno evidenziare quattro tipi di informazione attraverso i bottoni presenti nella parte superiore:
+	\begin{itemize}
+		\item statement eseguiti (\textit{run}) in verde;
+		\item statement non eseguiti (\textit{missing}) in rosso;
+		\item statement esclusi dall'analisi (\textit{excluded}) in grigio;
+		\item statement parzialmente eseguiti (\textit{partial}) in giallo (ad esempio costrutti \textit{if} privi del ramo \textit{else}).
+	\end{itemize}
+	
+	\newpage
+	\section*{Esercizio 2 - Calcolo dell'Irpef}
+	\addcontentsline{toc}{section}{Esercizio 2 - Calcolo dell'Irpef}
+	
+	\subsection*{Codice dell'algoritmo}
+	\addcontentsline{toc}{subsection}{Codice dell'algoritmo}
+	Per lo svolgimento di questo esercizio ci siamo basati sull'algoritmo di calcolo dell'\textit{Irpef} (acronimo di \textit{Imposta sul Reddito delle Persone Fisiche}) presente a questo indirizzo: \url{https://www.studiocataldi.it/risorse/calcolo-irpef/}.
+	
+	Il file \textit{irpef.py} deve essere eseguito ricevendo in input un solo parametro: il reddito annuale sul quale si vuole calcolare l'\textit{Irpef}. Questo parametro, dopo aver constatato che si tratta di un valore numerico positivo, verrà passato alla seguente procedura:
+	\begin{itemize}
+		\item \textit{irpef\_calculation(income)}: questa funzione si occuperà di analizzare il reddito inserito dall'utente per capire in quale dei cinque scaglioni ci si trova ed applicare l'equazione corretta per il calcolo dell'\textit{Irpef}.
+		
+		La procedura infine ritornerà il valore dell'imposta sul reddito relativa all'importo inserito e allo scaglione in cui si troverà l'individuo.
+	\end{itemize}
+	
+	\subsection*{Testing}
+	\addcontentsline{toc}{subsection}{Testing}
+	In seguito abbiamo creato il file \textit{test.py} nel quale sono contenuti gli \textit{unit test} relativi alla procedura sopradescritta. Le parti principali di questi test sono gli \textit{assert} e, anche in questo caso, ci siamo orientati sull'utilizzo degli \textit{assertEqual} per verifica che la procedura, con eventuali input, restituisca il risultato atteso.
+	
+	Questi test sono stati utili per verificare il corretto funzionamento dell'algoritmo implementato, infatti all'indirizzo \url{https://www.studiocataldi.it/risorse/calcolo-irpef/} è anche possibile effettuare online il calcolo dell'\textit{Irpef} su qualsiasi reddito.
+	
+	Anche in questo caso la selezione degli input non è stata casuale, bensì abbiamo prodotto delle combinazioni che permettano di effettuare una \textit{coverage} del codice quanto più vicina al 100\%. Per fare ciò è necessario inserire dei parametri che consentano di ricoprire ciascun \textit{branch} di esecuzione.
+	
+	In questo caso non è stato complesso perché è stato sufficiente inserire cinque redditi che appartenessero ciascuno ad uno scaglione diverso. Facendo ciò, abbiamo ottenuto una coverage del 100\% sulla procedura \textit{irpef\_calculation(income)}.
+	
+	Non essendo invece rilevanti i test sul \textit{main} (verrà sempre eseguito all'avvio del programma), abbiamo inserito la clausola \textit{$\sharp$pragma: no cover} che ci consente di escludere la porzione di codice scelta dall'analisi del programma.
+	
+	Per verificare la correttezza dei test presenti nel file \textit{test.py} è sufficiente avviare il Bash-Script chiamato \textit{script.sh} che eseguirà tutti gli \textit{assertEqual} presenti e riporterà i risultati della coverage nel file \textit{report.txt}, mostrando (come nell'esercizio precedente) le seguenti informazioni relative a \textit{irpef.py}:
+	\begin{itemize}
+		\item numero di statement presenti nel programma (\textit{Stmts}) e quanti di essi non sono stati eseguiti (\textit{Miss});
+		\item numero di branch presenti nel programma (\textit{Branch}) e quanti di essi non sono stati visitati (\textit{BrMiss});
+		\item la percentuale di \textit{coverage} dell'intero file (\textit{Cover});
+		\item le righe di codice non visitate dai test (\textit{Missing}).
+		
+	\end{itemize}
+	
+	\noindent
+	Come nell'esercizio precedente, lo script riporterà anche il risultato dei test in formato \textit{HTML}. In esso sarà riportato il codice sorgente del programma del quale si potranno evidenziare quattro tipi di informazione attraverso i bottoni presenti nella parte superiore:
+	\begin{itemize}
+		\item statement eseguiti (\textit{run}) in verde;
+		\item statement non eseguiti (\textit{missing}) in rosso;
+		\item statement esclusi dall'analisi (\textit{excluded}) in grigio;
+		\item statement parzialmente eseguiti (\textit{partial}) in giallo (ad esempio costrutti \textit{if} privi del ramo \textit{else}).
+	\end{itemize}
+	
+	\newpage
+	\section*{Esercizio 3 - Calcolo della Pasqua}
+	\addcontentsline{toc}{section}{Esercizio 3 - Calcolo della Pasqua}
+	
+	\subsection*{Codice dell'algoritmo}
+	\addcontentsline{toc}{subsection}{Codice dell'algoritmo}
+	Per lo svolgimento di questo esercizio ci siamo basati sull'algoritmo di \textit{Oudin-Tondering} per il calcolo della \textit{Pasqua}, presente a questo indirizzo: \url{http://calendario.eugeniosongia.com/oudin.htm}.
+	
+	Il file \textit{easter.py} deve essere eseguito ricevendo in input un solo parametro: l'anno del quale si vuole calcolare il giorno della Pasqua. Questo parametro, dovrà essere un numero maggiore di $1582$, anno in cui è stato introdotto il nostro \textit{calendario Gregoriano} e successivamente verrà passato come parametro alla seguente procedura:
+	\begin{itemize}
+		\item \textit{easter\_day(year)}: questa funzione si occuperà di applicare l'algoritmo sopraindicato per individuare il mese e il giorno esatti della Pasqua per l'anno indicato dall'utente.
+		
+		Successivamente si creano diversi branch per migliorare la stampa a video del risultato:
+		\begin{itemize}
+			\item il mese verrà convertito da numero a stringa di letterali;
+			\item il giorno verrà seguito dai suffissi \textit{st}, \textit{nd}, \textit{rd}, \textit{th} a seconda della sua ultima cifra.
+		\end{itemize}
+		
+		Infine la procedura ritornerà una stringa contente il risultato del calcolo che verrà stampata a video nella funzione \textit{main} del programma.
+	\end{itemize}
+	
+	\subsection*{Testing}
+	\addcontentsline{toc}{subsection}{Testing}
+	In seguito abbiamo creato il file \textit{test.py} nel quale sono contenuti gli \textit{unit test} relativi alla procedura sopradescritta. Le parti principali di questi test sono gli \textit{assert} e, anche in questo caso, ci siamo orientati sull'utilizzo degli \textit{assertEqual} per verifica che la procedura, con eventuali input, restituisca il risultato atteso.
+	
+	Questi test sono stati utili per verificare il corretto funzionamento dell'algoritmo implementato, infatti all'indirizzo \url{http://digilander.libero.it/acqua67/calcolo\%20della\%20data\%20di\%20pasqua.htm} è possibile effettuare online il calcolo della Pasqua per qualsiasi anno.
+	
+	Anche in questo caso la selezione degli input non è stata casuale, bensì abbiamo prodotto delle combinazioni che permettano di effettuare una \textit{coverage} del codice quanto più vicina al 100\%. Per fare ciò è necessario inserire dei parametri che consentano di ricoprire ciascun \textit{branch} di esecuzione.
+	
+	\MakeUppercase{è} stato sufficiente inserire quattro anni in cui la Pasqua arrivasse nei mesi di Marzo e Aprile e in giorni in cui la ultima cifra fosse $1$, $2$, $3$ e qualsiasi altra. Facendo ciò, abbiamo ottenuto una coverage del 100\% sulla procedura \textit{easter\_day(year)}.
+	
+	Non essendo invece rilevanti i test sul \textit{main} (verrà sempre eseguito all'avvio del programma), abbiamo inserito la clausola \textit{$\sharp$pragma: no cover} che ci consente di escludere la porzione di codice scelta dall'analisi del programma.
+	
+	Per verificare la correttezza dei test presenti nel file \textit{test.py} è sufficiente avviare il Bash-Script chiamato \textit{script.sh} che eseguirà tutti gli \textit{assertEqual} presenti e riporterà i risultati della coverage nel file \textit{report.txt}, mostrando (come negli esercizi precedenti) le seguenti informazioni relative a \textit{easter.py}:
+	\begin{itemize}
+		\item numero di statement presenti nel programma (\textit{Stmts}) e quanti di essi non sono stati eseguiti (\textit{Miss});
+		\item numero di branch presenti nel programma (\textit{Branch}) e quanti di essi non sono stati visitati (\textit{BrMiss});
+		\item la percentuale di \textit{coverage} dell'intero file (\textit{Cover});
+		\item le righe di codice non visitate dai test (\textit{Missing}).
+		
+	\end{itemize}
+	
+	\noindent
+	Come negli esercizi precedenti, lo script riporterà anche il risultato dei test in formato \textit{HTML}. In esso sarà riportato il codice sorgente del programma del quale si potranno evidenziare quattro tipi di informazione attraverso i bottoni presenti nella parte superiore:
+	\begin{itemize}
+		\item statement eseguiti (\textit{run}) in verde;
+		\item statement non eseguiti (\textit{missing}) in rosso;
+		\item statement esclusi dall'analisi (\textit{excluded}) in grigio;
+		\item statement parzialmente eseguiti (\textit{partial}) in giallo (ad esempio costrutti \textit{if} privi del ramo \textit{else}).
+	\end{itemize}
+	
+	\newpage
+	\section*{Esercizio 4 - Monitoraggio dei processi}
+	\addcontentsline{toc}{section}{Esercizio 4 - Monitoraggio dei processi}
+	Il seguente esercizio si basa principalmente sull'utilizzo del comando bash \textit{strace}. Esso è un tool utile per la diagnostica e il debugging. Permette di tracciare e salvare le chiamate di sistema di un processo.
+	
+	Nel caso più semplice, \textit{strace} esegue il comando indicato. Intercetta e salva le chiamate di sistema che sono chiamate dal processo e i segnali da esso ricevuti. Il nome di ogni chiamata, i suoi argomenti ed il suo valore di ritorno vengono stampati sullo \textit{standard error} o sul file specificato tramite l'opzione \textit{-o output\_filename}.
+	
+	\textit{strace} può essere arricchito con delle opzioni che andranno a modificare il suo output secondo alcuni parametri. Nel nostro codice sono presenti le seguenti opzioni:
+	\begin{itemize}
+		\item \textit{-o output\_filename}: riporta l'output del comando nel file indicato;
+		\item \textit{-ff}: se è presente l'opzione \textit{-o output\_filename}, ogni processo tracciato viene scritto in \textit{filename.pid} (dove \textit{pid} è il codice identificativo del processo);
+		\item \textit{-p pid}: permette di specificare il pid del processo che si vuole monitorare con \textit{strace}.		
+	\end{itemize}
+	
+	\subsection*{Codice}
+	\addcontentsline{toc}{subsection}{Codice}
+	Per lo svolgimento di questo esercizio è stata implementata una procedura nella quale un processo padre genera un figlio e scambia messaggi con esso.
+	
+	Nel file C \textit{fork.c} il processo padre, attraverso la chiamata di sistema \textit{fork()}, genera un processo figlio. Successivamente il padre scriverà un messaggio sulla \textit{pipe} che verrà letto dal figlio e stampato a video.
+	
+	Lo script \textit{monitor.sh} esegue il comando \textit{strace} sul processo \textit{run} (l'eseguibile del file \textit{fork.c}) e ne salva il risultato in due file di testo chiamati \textit{dump.txt.pid}.
+	
+	Dai nomi dei file verranno estratti i \textit{pid} dei processi per individuare il processo padre (quello con \textit{pid} minore). Si analizza il corrispondente file \textit{dump} per verificare se ha eseguito qualche \textit{fork()} (nell'output di \textit{strace} è indicata come \textit{clone}) e scrive nel file \textit{forks.log} il numero di processi creati ed il pid di ogni figlio.
+	
+	Successivamente vengono analizzate anche le chiamate di sistema \textit{write(fd, str, len(str))} del processo padre. Da queste chiamate si estrae il \textit{file descriptor} e si controlla che sia maggiore di 2, poiché:
+	\begin{itemize}
+		\item lo standard input ha $0$ come \textit{file descriptor};
+		\item lo standard output ha $1$ come \textit{file descriptor}; 
+		\item lo standard error ha $2$ come \textit{file descriptor};
+		\item la pipe creata dal processo padre ha un \textit{file descriptor} maggiore di $2$.
+	\end{itemize}
+	
+	\noindent
+	Se vengono trovate \textit{write(fd, str, len(str))} con \textit{fd}$\geq3$, si salvano i messaggi scambiati sul file \textit{comm.log}.
+	
+	\subsubsection*{Analisi di una sessione ssh}
+	\addcontentsline{toc}{subsection}{Analisi di una sessione ssh}
+	Sono inoltre presenti due script bash per verificare la possibilità di furto di dati sensibili, quali credenziali di accesso, sul processo \textit{ssh}.
+	
+	Il file \textit{ssh-start.sh} avvia una sessione \textit{ssh} collegandosi a localhost. La sessione viene poi chiusa con \textit{exit} per consentire il completamento del processo di intercettazione delle chiamate di sistema. 
+	
+	Il file \textit{ssh-sniffing.sh} recupera il pid del processo \textit{ssh} da monitorare ed esegue il comando \textit{strace} su di esso generando il file \textit{ssh.log}. Lo script chiede poi la password all'utente per fornire una prova del fatto che questa sia stata intercettata.
+	
+	\newpage
+	\section*{Esercizio 5a (semplificato) - Monitoraggio degli accessi a memoria non autorizzati}
+	\addcontentsline{toc}{section}{Esercizio 5a (semplificato) - Monitoraggio degli accessi a memoria non autorizzati}
+	Il seguente esercizio si basa principalmente sull'utilizzo del comando bash \textit{ltrace}. Esso traccia e permette di salvare le chiamate dinamiche alle librerie, effettuate dal processo in esecuzione e i segnali ricevuti da esso. Questo comando mostra i parametri delle funzioni invocate e le chiamate di sistema.
+	
+	\textit{ltrace} può essere arricchito con delle opzioni che andranno a modificare il suo output secondo alcuni parametri. Nel nostro codice sono presenti le seguenti opzioni:
+	\begin{itemize}
+		\item \textit{-b}: disabilita la stampa dei segnali ricevuti dal processo tracciato;
+		\item \textit{-o output\_filename}: riporta l'output del comando nel file \textit{output\_filename}.
+	\end{itemize}
+	
+	\subsection*{Codice}
+	\addcontentsline{toc}{subsection}{Codice}
+	Per lo svolgimento di questo esercizio è stata implementata una procedura che tenta di scrivere in un file posto in una directory per cui non è concessa autorizzazione di scrittura o accesso.
+	
+	Come suggerito abbiamo sfruttato la subdirectory \textit{/var} della root directory in Linux, la quale contiene i file che vengono scritti dal sistema durante il corso delle sue operazioni.
+	
+	Nel file C \textit{illegal\_folder\_access.c} si tenta di creare e aprire un file \textit{test.txt} nella directory \textit{/var} con permessi di scrittura e successivamente si vuole scrivere un carattere in esso.
+	
+	La funzione di libreria \textit{fopen("/var/test.txt", "w")} ritornerà il valore \textit{NULL} perché il processo non detiene i permessi per la creazione dei file in tale directory.
+	\\ \\
+	Lo script \textit{monitor.sh} crea un file di testo temporaneo (\textit{ltrace\_log.txt}) in cui salvare l'output del comando \textit{ltrace} e il file \textit{log.txt}.
+	
+	Dopo aver eseguito il comando \textit{ltrace} per tracciare le chiamate dinamiche alle librerie (eseguite dal processo in esecuzione) si filtra l'output per ottenere solamente i record che fanno riferimento alla funzione di libreria (\textit{fopen}).
+	
+	Fatto ciò, si scorrono tutti i record rimanenti e per ciascuno di questi si estrae il percorso a cui fa rifermento la funzione. Da questo sarà poi possibile ricavare il proprietario della directory alla quale si vuole accedere.
+	
+	Confrontando l'utente con il dato ricavato si è in grado di affermare se si tratta di un accesso regolare o meno e ciò verrà riportato nel file \textit{log.txt}.
+	
+	
+	
+\end{document}
+
